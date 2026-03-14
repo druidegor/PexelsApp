@@ -5,6 +5,6 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class CollectionDto(
-    @SerialName("id") val id: Int,
+    @SerialName("id") val id: String,
     @SerialName("title") val title: String
 )

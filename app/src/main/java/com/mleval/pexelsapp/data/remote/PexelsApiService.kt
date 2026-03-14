@@ -7,7 +7,7 @@ import retrofit2.http.Query
 interface PexelsApiService {
 
     @GET("curated")
-    fun loadCuratedPhotos(
+    suspend fun loadCuratedPhotos(
         @Query("page") page: Int = 1,
         @Query("per_page") perPage: Int = 30
     ): PhotosResponseDto

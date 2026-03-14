@@ -2,6 +2,7 @@
 
 package com.mleval.pexelsapp.presentation.screens.home
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.mleval.pexelsapp.domain.entity.Collection
@@ -41,6 +42,7 @@ class HomeViewModel @Inject constructor(
         viewModelScope.launch {
             try {
                 val collections = getFeaturedCollectionsUseCase()
+                Log.d("ViewModel", "collections loading")
                 _state.update {
                     HomeScreenState.HomeContent(
                         photos = emptyList(),
@@ -48,6 +50,7 @@ class HomeViewModel @Inject constructor(
                         query = ""
                     )
                 }
+                Log.d("ViewModel", "collections loading2")
             } catch (e: Exception) {
                 _state.update { HomeScreenState.Error }
             }
@@ -55,8 +58,6 @@ class HomeViewModel @Inject constructor(
         }
 
         query
-            .debounce(500)
-            .distinctUntilChanged()
             .onEach { query ->
                 _state.update { previousState ->
                     if (previousState is HomeScreenState.HomeContent) {

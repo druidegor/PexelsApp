@@ -11,15 +11,23 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
 
 private val DarkColorScheme = darkColorScheme(
-    primary = Purple80,
-    secondary = PurpleGrey80,
-    tertiary = Pink80
+    primary = Red,
+    background = Grey400,
+    surface = Grey200,
+    onSurface = White,
+    onSurfaceVariant = White,
+    secondary = White600,
+    onBackground = White
 )
 
 private val LightColorScheme = lightColorScheme(
-    primary = Purple40,
-    secondary = PurpleGrey40,
-    tertiary = Pink40
+    primary = Red,
+    background = White,
+    surface = White200,
+    onSurface = Grey400,
+    onSurfaceVariant = White,
+    secondary = White400,
+    onBackground = Grey
 
     /* Other default colors to override
     background = Color(0xFFFFFBFE),
@@ -36,7 +44,7 @@ private val LightColorScheme = lightColorScheme(
 fun PexelsAppTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
     // Dynamic color is available on Android 12+
-    dynamicColor: Boolean = true,
+    dynamicColor: Boolean = false,
     content: @Composable () -> Unit
 ) {
     val colorScheme = when {

@@ -1,5 +1,6 @@
 package com.mleval.pexelsapp.data.repository
 
+import android.util.Log
 import com.mleval.pexelsapp.data.mapper.toDomain
 import com.mleval.pexelsapp.data.remote.PexelsApiService
 import com.mleval.pexelsapp.domain.entity.Collection
@@ -21,7 +22,11 @@ class PexelsRepositoryImpl @Inject constructor(
     }
 
     override suspend fun getFeaturedCollections(): List<Collection> {
-        return pexelsApi.loadFeaturedCollections().toDomain()
+        return pexelsApi.loadFeaturedCollections()
+            .also {
+                Log.d("ViewModel", "collections loading ${this}")
+            }
+            .toDomain()
     }
 
     override suspend fun searchPhotos(query: String): Flow<List<Photo>> {
