@@ -13,7 +13,7 @@ interface PexelsApiService {
     ): PhotosResponseDto
 
     @GET("collections/featured")
-    suspend fun getFeaturedCollections(
+    suspend fun loadFeaturedCollections(
         @Query("page") page: Int = 1,
         @Query("per_page") perPage: Int = 7
     ): CollectionsDto
