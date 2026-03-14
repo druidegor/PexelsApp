@@ -1,4 +1,4 @@
-package com.mleval.pexelsapp.ui.theme
+package com.mleval.pexelsapp.presentation.ui.theme
 
 import androidx.compose.ui.graphics.Color
 

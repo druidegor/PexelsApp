@@ -2,4 +2,11 @@
 <resources>
 
     <style name="Theme.PexelsApp" parent="android:Theme.Material.Light.NoActionBar" />
+
+    <style name="Theme.PexelsApp.SplashScreen" parent="Theme.SplashScreen" >
+        <item name="windowSplashScreenBackground">@color/red</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/splash_logo</item>
+        <item name="postSplashScreenTheme">@style/Theme.PexelsApp</item>
+    </style>
+
 </resources>
