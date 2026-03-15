@@ -5,6 +5,7 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class PhotoDto(
-    @SerialName("id") val id: Int,
-    @SerialName("src") val src: PhotoSrcDto
+    @SerialName("id") val id: Long,
+    @SerialName("src") val src: PhotoSrcDto,
+    @SerialName("photographer") val photographer: String
 )

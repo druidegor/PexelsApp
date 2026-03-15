@@ -5,11 +5,11 @@ import com.mleval.pexelsapp.domain.repository.PexelsRepository
 import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject
 
-class GetCuratedPhotosUseCase @Inject constructor(
+class GetPhotosFromBookMarkUseCase @Inject constructor(
     private val pexelsRepository: PexelsRepository
 ) {
 
-    suspend operator fun invoke(page: Int): Flow<List<Photo>> {
-        return pexelsRepository.getCuratedPhotos(page)
+    suspend operator fun invoke(): Flow<List<Photo>> {
+        return pexelsRepository.getPhotosFromBookMark()
     }
 }

@@ -18,6 +18,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
@@ -36,13 +37,15 @@ class HomeViewModel @Inject constructor(
     val state = _state.asStateFlow()
 
     private val query = MutableStateFlow<String>("")
+    private var page = 1
 
     init {
 
         viewModelScope.launch {
             try {
-                val collections = getFeaturedCollectionsUseCase()
-                Log.d("ViewModel", "collections loading")
+                val collections = getFeaturedCollectionsUseCase().mapIndexed { index, collection ->
+                    collection.copy(index = index)
+                }
                 _state.update {
                     HomeScreenState.HomeContent(
                         photos = emptyList(),
@@ -50,14 +53,18 @@ class HomeViewModel @Inject constructor(
                         query = ""
                     )
                 }
-                Log.d("ViewModel", "collections loading2")
+                observeQuery()
             } catch (e: Exception) {
                 _state.update { HomeScreenState.Error }
             }
 
         }
 
+    }
+
+    private fun observeQuery() {
         query
+            .onEach { page = 1 }
             .onEach { query ->
                 _state.update { previousState ->
                     if (previousState is HomeScreenState.HomeContent) {
@@ -69,9 +76,9 @@ class HomeViewModel @Inject constructor(
             }
             .flatMapLatest { query ->
                 if (query.isEmpty()) {
-                    getCuratedPhotosUseCase()
+                    getCuratedPhotosUseCase(page)
                 } else {
-                    searchPhotosUseCase(query)
+                    searchPhotosUseCase(query,page)
                 }
             }
             .onEach {photos ->
@@ -83,7 +90,10 @@ class HomeViewModel @Inject constructor(
                             } else {
                                 it.copy(isSelected = false)
                             }
-                        }
+                        }.sortedWith (
+                            compareByDescending<Collection> {it.isSelected  }
+                                .thenBy { it.index }
+                        )
                         previousState.copy(photos = photos, collections = newCollections, isLoading = false)
                     } else {
                         previousState
@@ -95,7 +105,6 @@ class HomeViewModel @Inject constructor(
             }
             .launchIn(viewModelScope)
     }
-
     fun processCommands(command: HomeScreenCommands) {
         when(command) {
             is HomeScreenCommands.ClickSearch -> {
@@ -107,21 +116,28 @@ class HomeViewModel @Inject constructor(
                                 previousState.copy(isLoading = true)
                             } else previousState
                         }
-                        searchPhotosUseCase(command.query).collect { photos ->
-                            _state.update { previousState ->
-                                if (previousState is HomeScreenState.HomeContent) {
-                                    previousState.copy(
-                                        query = command.query,
-                                        photos = photos,
-                                        isLoading = false
-                                    )
-                                } else {
-                                    previousState
-                                }
+                        val photos = if (command.query.isEmpty()) {
 
-                            }
+                            getCuratedPhotosUseCase(page).first()
+
+                        } else {
+
+                            searchPhotosUseCase(command.query,page).first()
+
                         }
+                        _state.update { previousState ->
 
+                            if (previousState is HomeScreenState.HomeContent) {
+
+                                previousState.copy(
+                                    query = command.query,
+                                    photos = photos,
+                                    isLoading = false
+                                )
+
+                            } else previousState
+
+                        }
                     } catch (e: Exception) {
                         _state.update { HomeScreenState.Error }
                     }
@@ -142,13 +158,20 @@ class HomeViewModel @Inject constructor(
                             } else {
                                 it.copy(isSelected = false)
                             }
-                        }
+                        }.sortedWith (
+                            compareByDescending<Collection> {it.isSelected  }
+                                .thenBy { it.index }
+                        )
                         previousState.copy(collections = newCollections)
                     } else {
                         previousState
                     }
 
                 }
+            }
+
+            HomeScreenCommands.ClearQuery -> {
+                query.update { "" }
             }
         }
     }
@@ -160,18 +183,21 @@ sealed interface HomeScreenCommands{
 
     data class ClickSearch(val query: String): HomeScreenCommands
 
+    data object ClearQuery: HomeScreenCommands
+
     data class ToggleCollection(val collectionTitle: String): HomeScreenCommands
+
 }
 sealed interface HomeScreenState {
 
-    object Loading: HomeScreenState
+    data object Loading: HomeScreenState
 
     data class HomeContent(
         val query: String = "",
         val photos: List<Photo> = emptyList(),
         val collections: List<Collection> = emptyList(),
-        val isLoading: Boolean = false
+        val isLoading: Boolean = false,
     ): HomeScreenState
 
-    object Error: HomeScreenState
+    data object Error: HomeScreenState
 }

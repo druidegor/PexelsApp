@@ -5,5 +5,5 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class PhotoSrcDto(
-    @SerialName("medium") val medium: String
+    @SerialName("large2x") val larger: String
 )

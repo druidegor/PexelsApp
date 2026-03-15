@@ -57,6 +57,7 @@ android {
 
 dependencies {
 
+    implementation(libs.accompanist.placeholder.material.v0340)
     implementation(libs.androidx.material.icons.extended)
     implementation(libs.androidx.core.splashscreen)
     implementation(libs.coil.compose)

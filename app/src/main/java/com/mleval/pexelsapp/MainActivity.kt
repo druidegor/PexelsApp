@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Scaffold
 import androidx.compose.ui.Modifier
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
+import com.mleval.pexelsapp.navigation.NavGraph
 import com.mleval.pexelsapp.presentation.screens.home.HomeScreen
 import com.mleval.pexelsapp.presentation.ui.theme.PexelsAppTheme
 import dagger.hilt.android.AndroidEntryPoint
@@ -20,7 +21,7 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             PexelsAppTheme {
-                    HomeScreen()
+                NavGraph()
             }
         }
     }

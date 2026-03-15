@@ -9,7 +9,7 @@ class SearchPhotosUseCase @Inject constructor(
     private val pexelsRepository: PexelsRepository
 ) {
 
-    suspend operator fun invoke(query: String): Flow<List<Photo>> {
-        return pexelsRepository.searchPhotos(query)
+    suspend operator fun invoke(query: String, page: Int): Flow<List<Photo>> {
+        return pexelsRepository.searchPhotos(query, page)
     }
 }
