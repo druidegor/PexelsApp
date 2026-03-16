@@ -1,5 +1,6 @@
 package com.mleval.pexelsapp.data.repository
 
+import android.util.Log
 import com.mleval.pexelsapp.data.local.PexelsDao
 import com.mleval.pexelsapp.data.mapper.toBookMarkPhoto
 import com.mleval.pexelsapp.data.mapper.toCollectionDbModel
@@ -35,10 +36,8 @@ class PexelsRepositoryImpl @Inject constructor(
     override fun getCuratedPhotos(page: Int): Flow<List<Photo>> = flow {
 
         val cacheTime = pexelsDao.getPhotosCacheTime()
-
         val isCacheValid = cacheTime != null &&
                 System.currentTimeMillis() - cacheTime < CACHE_TTL
-
 
         if (!isCacheValid) {
             try {

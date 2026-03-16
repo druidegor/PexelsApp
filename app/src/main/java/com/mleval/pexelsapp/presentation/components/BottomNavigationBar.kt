@@ -79,7 +79,9 @@ fun BottomNavigationBar(
                                 indication = null,
                                 interactionSource = remember { MutableInteractionSource() }
                             ) {
-                                navController.navigate(item.route)
+                                navController.navigate(item.route) {
+                                    launchSingleTop = true
+                                }
                             },
                         contentAlignment = Alignment.Center
                     ) {

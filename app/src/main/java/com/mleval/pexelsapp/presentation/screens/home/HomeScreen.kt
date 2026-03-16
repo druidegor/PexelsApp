@@ -14,9 +14,11 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.lazy.staggeredgrid.LazyVerticalStaggeredGrid
 import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
 import androidx.compose.foundation.lazy.staggeredgrid.itemsIndexed
+import androidx.compose.foundation.lazy.staggeredgrid.rememberLazyStaggeredGridState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Clear
@@ -42,6 +44,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.room.util.query
 import com.mleval.pexelsapp.R
 import com.mleval.pexelsapp.domain.entity.Collection
 import com.mleval.pexelsapp.domain.entity.Photo
@@ -195,8 +198,15 @@ private fun CollectionsRow(
     collections: List<Collection>,
     onCollectionClick: (String) -> Unit
 ) {
+    val lazyListState = rememberLazyListState()
+
+    LaunchedEffect(collections) {
+        lazyListState.scrollToItem(0)
+    }
+
     LazyRow(
         modifier = modifier,
+        state = lazyListState,
         contentPadding = PaddingValues(start = 24.dp),
         horizontalArrangement = Arrangement.spacedBy(16.dp)
     ) {
@@ -223,8 +233,15 @@ private fun PhotosGrid(
     isLoading: Boolean,
     onPhotoClick: (Long) -> Unit,
 ) {
+    val lazyListState = rememberLazyStaggeredGridState()
+
+    LaunchedEffect(photos) {
+        lazyListState.scrollToItem(0)
+    }
+
     LazyVerticalStaggeredGrid(
         modifier = modifier.fillMaxSize(),
+        state = lazyListState,
         columns = StaggeredGridCells.Fixed(2),
         contentPadding = PaddingValues(horizontal = 24.dp),
         horizontalArrangement = Arrangement.spacedBy(16.dp),

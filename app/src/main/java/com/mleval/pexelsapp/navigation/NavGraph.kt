@@ -3,6 +3,7 @@ package com.mleval.pexelsapp.navigation
 import android.os.Bundle
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.lifecycle.Lifecycle
 import androidx.navigation.NavController
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
@@ -28,7 +29,9 @@ fun NavGraph(
             HomeScreen(
                 modifier = modifier,
                 onPhotoClick = {
-                    navController.navigate(Screen.Details.createRoute(it, Source.HOME))
+                    navController.navigate(Screen.Details.createRoute(it, Source.HOME)) {
+                        launchSingleTop = true
+                    }
                 }
             )
         }
@@ -37,7 +40,14 @@ fun NavGraph(
                 id = Screen.Details.getPhotoId(it.arguments),
                 source = Screen.Details.getPhotoSource(it.arguments),
                 onNavigationClick = {
-                    navController.popBackStack()
+                    val canGoBack = navController
+                        .currentBackStackEntry
+                        ?.lifecycle
+                        ?.currentState == Lifecycle.State.RESUMED
+
+                    if (canGoBack) {
+                        navController.popBackStack()
+                    }
                 }
             )
         }
@@ -46,10 +56,19 @@ fun NavGraph(
             BookmarksScreen(
                 modifier = modifier,
                 onClick = {
-                    navController.popBackStack()
+                    val canGoBack = navController
+                        .currentBackStackEntry
+                        ?.lifecycle
+                        ?.currentState == Lifecycle.State.RESUMED
+
+                    if (canGoBack) {
+                        navController.popBackStack()
+                    }
                 },
                 onPhotoClick = {
-                    navController.navigate(Screen.Details.createRoute(it, Source.BOOKMARKS))
+                    navController.navigate(Screen.Details.createRoute(it, Source.BOOKMARKS)) {
+                        launchSingleTop = true
+                    }
                 }
             )
         }
