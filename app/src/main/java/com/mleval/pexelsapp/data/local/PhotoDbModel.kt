@@ -8,5 +8,7 @@ data class PhotoDbModel(
     @PrimaryKey val id: Long,
     val imageUrl: String,
     val photographer: String,
+    val width: Int,
+    val height: Int,
     val cachedAt: Long
 )

@@ -5,7 +5,7 @@ import androidx.room.RoomDatabase
 
 @Database(
     entities = [CollectionDbModel::class, PhotoDbModel::class, BookMarkDbModel::class],
-    version = 4,
+    version = 6,
     exportSchema = false
 )
 abstract class PexelsDataBase: RoomDatabase() {

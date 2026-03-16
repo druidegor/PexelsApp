@@ -2,16 +2,23 @@ package com.mleval.pexelsapp.navigation
 
 import android.os.Bundle
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import androidx.navigation.NavController
+import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.mleval.pexelsapp.presentation.screens.bookmarks.BookmarksScreen
 import com.mleval.pexelsapp.presentation.screens.details.DetailsScreen
 import com.mleval.pexelsapp.presentation.screens.details.Source
 import com.mleval.pexelsapp.presentation.screens.home.HomeScreen
 
+
 @Composable
-fun NavGraph() {
-    val navController = rememberNavController()
+fun NavGraph(
+    modifier: Modifier = Modifier,
+    navController: NavHostController
+) {
 
     NavHost(
         navController = navController,
@@ -19,6 +26,7 @@ fun NavGraph() {
     ) {
         composable(Screen.Home.route) {
             HomeScreen(
+                modifier = modifier,
                 onPhotoClick = {
                     navController.navigate(Screen.Details.createRoute(it, Source.HOME))
                 }
@@ -33,12 +41,26 @@ fun NavGraph() {
                 }
             )
         }
+
+        composable(Screen.Bookmark.route) {
+            BookmarksScreen(
+                modifier = modifier,
+                onClick = {
+                    navController.popBackStack()
+                },
+                onPhotoClick = {
+                    navController.navigate(Screen.Details.createRoute(it, Source.BOOKMARKS))
+                }
+            )
+        }
     }
 }
 
 sealed class Screen(val route: String) {
 
     data object Home: Screen("home")
+
+    data object Bookmark: Screen("bookmark")
 
     data object Details: Screen("details/{id}/{source}") {
 

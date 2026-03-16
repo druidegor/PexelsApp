@@ -10,15 +10,17 @@ import kotlinx.coroutines.flow.Flow
 @Dao
 interface PexelsDao {
 
-    @Query("SELECT EXISTS(SELECT 1 FROM bookmakers WHERE id = :id)")
+    @Query("SELECT COUNT(*) FROM photos")
+    suspend fun getPhotosCount(): Int
+    @Query("SELECT EXISTS(SELECT 1 FROM bookmarks WHERE id = :id)")
     suspend fun isPhotoBookMarked(id: Long): Boolean
-    @Query("DELETE FROM bookmakers WHERE id = :id")
+    @Query("DELETE FROM bookmarks WHERE id = :id")
     suspend fun removePhotoFromBookMark(id: Long)
 
-    @Query("SELECT *FROM bookmakers")
+    @Query(" SELECT * FROM bookmarks")
     fun getPhotosFromBookMark(): Flow<List<BookMarkDbModel>>
 
-    @Query("SELECT * FROM bookmakers WHERE id = :id")
+    @Query("SELECT * FROM bookmarks WHERE id = :id")
     suspend fun getPhotoFromBookMark(id: Long): BookMarkDbModel
 
     @Insert(onConflict = REPLACE)

@@ -14,8 +14,10 @@ import com.mleval.pexelsapp.domain.entity.Photo
 import com.mleval.pexelsapp.domain.repository.PexelsRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emitAll
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
+import java.io.IOException
 import javax.inject.Inject
 
 class PexelsRepositoryImpl @Inject constructor(
@@ -37,13 +39,17 @@ class PexelsRepositoryImpl @Inject constructor(
         val isCacheValid = cacheTime != null &&
                 System.currentTimeMillis() - cacheTime < CACHE_TTL
 
+
         if (!isCacheValid) {
-            loadCuratedPhotos(page)
-        }
-        emitAll(
-            pexelsDao.getAllPhotos().map {
-                it.toPhotoDomain()
+            try {
+                loadCuratedPhotos(page)
+            } catch (e: IOException) {
+                if (pexelsDao.getPhotosCount() == 0) throw e
             }
+        }
+
+        emitAll(
+            pexelsDao.getAllPhotos().map { it.toPhotoDomain() }
         )
     }
 
@@ -53,8 +59,20 @@ class PexelsRepositoryImpl @Inject constructor(
         val isCacheValid = cacheTime != null &&
                 System.currentTimeMillis() - cacheTime < CACHE_TTL
 
-        if (!isCacheValid) {
-            loadFeaturedCollections()
+        try {
+
+            if (!isCacheValid) {
+                loadFeaturedCollections()
+            }
+
+        } catch (e: IOException) {
+
+            val cache = pexelsDao.getAllCollections()
+
+            if (cache.isEmpty()) {
+                throw e
+            }
+
         }
         return pexelsDao.getAllCollections().toCollectionDomain()
     }
@@ -67,27 +85,17 @@ class PexelsRepositoryImpl @Inject constructor(
     }
 
     private suspend fun loadCuratedPhotos(page: Int) {
-        try{
-            val time = System.currentTimeMillis()
-            val photos = pexelsApi.loadCuratedPhotos(page).toPhotoDbModel(time)
+        val time = System.currentTimeMillis()
+        val photos = pexelsApi.loadCuratedPhotos(page).toPhotoDbModel(time)
 
-            pexelsDao.replacePhotos(photos)
-
-        } catch (e: Exception) {
-
-        }
+        pexelsDao.replacePhotos(photos)
     }
 
     private suspend fun loadFeaturedCollections() {
-        try{
-            val time = System.currentTimeMillis()
-            val collections = pexelsApi.loadFeaturedCollections().toCollectionDbModel(time)
+        val time = System.currentTimeMillis()
+        val collections = pexelsApi.loadFeaturedCollections().toCollectionDbModel(time)
 
-            pexelsDao.replaceCollections(collections)
-
-        } catch (e: Exception) {
-
-        }
+        pexelsDao.replaceCollections(collections)
     }
 
     override suspend fun addPhotoToBookMark(photo: Photo) {

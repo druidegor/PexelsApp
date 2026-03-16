@@ -2,7 +2,6 @@
 
 package com.mleval.pexelsapp.presentation.screens.details
 
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.awaitEachGesture
@@ -29,7 +28,6 @@ import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -59,6 +57,7 @@ import coil3.compose.AsyncImage
 import coil3.request.ImageRequest
 import coil3.request.crossfade
 import com.mleval.pexelsapp.R
+import com.mleval.pexelsapp.presentation.components.ProgressBar
 
 @Composable
 fun DetailsScreen(
@@ -187,7 +186,7 @@ private fun DetailsContent(
             DetailsTopAppBar(
                 modifier = Modifier
                     .padding(horizontal = 24.dp),
-                photographer = state.photographer,
+                photographer = state.photo.photographer,
                 onNavigationClick = {
                     onNavigationClick()
                 }
@@ -200,7 +199,7 @@ private fun DetailsContent(
                 .padding(horizontal = 24.dp),
         ) {
             PhotoWithZoom(
-                imageUrl = state.imageUrl
+                imageUrl = state.photo.imageUrl
             )
             Spacer(Modifier.weight(1f))
                 DetailsBottomBar(
@@ -278,25 +277,6 @@ private fun PhotoWithZoom(
             )
     }
 
-}
-@Composable
-private fun ProgressBar(
-    modifier: Modifier = Modifier,
-    isLoading: Boolean
-) {
-    Box(
-        modifier = modifier
-            .fillMaxWidth()
-            .height(3.dp)
-    ) {
-        AnimatedVisibility(isLoading) {
-            LinearProgressIndicator(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(3.dp)
-            )
-        }
-    }
 }
 
 @Composable
@@ -395,7 +375,7 @@ private fun DetailsBottomBar(
                     }
 
                 } else {
-                    painterResource(R.drawable.ic_bookmark)
+                    painterResource(R.drawable.ic_bookmark_light)
                 },
                 contentDescription = stringResource(R.string.download_image),
                 tint = if (isBookmarked) Color.Unspecified else MaterialTheme.colorScheme.onSurface

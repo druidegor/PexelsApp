@@ -14,7 +14,9 @@ fun PhotoDto.toPhotoDomain(): Photo {
     return Photo(
         id = id,
         imageUrl = src.larger,
-        photographer = photographer
+        photographer = photographer,
+        width = width,
+        height = height
     )
 }
 fun PhotosResponseDto.toPhotoDbModel(time: Long): List<PhotoDbModel> {
@@ -23,7 +25,9 @@ fun PhotosResponseDto.toPhotoDbModel(time: Long): List<PhotoDbModel> {
             id = it.id,
             imageUrl = it.src.larger,
             photographer = it.photographer,
-            cachedAt = time
+            cachedAt = time,
+            width = it.width,
+            height = it.height
         )
     }
 }
@@ -43,7 +47,9 @@ fun List<PhotoDbModel>.toPhotoDomain(): List<Photo> {
         Photo(
             id = it.id,
             photographer = it.photographer,
-            imageUrl = it.imageUrl
+            imageUrl = it.imageUrl,
+            width = it.width,
+            height = it.height
         )
     }
 }
@@ -61,7 +67,9 @@ fun PhotosResponseDto.toDomain(): List<Photo> {
         Photo(
             id = it.id,
             imageUrl = it.src.larger,
-            photographer = it.photographer
+            photographer = it.photographer,
+            width = it.width,
+            height = it.height
         )
     }
 }
@@ -70,7 +78,9 @@ fun Photo.toBookMarkPhoto(): BookMarkDbModel {
     return BookMarkDbModel(
         id = id,
         imageUrl = imageUrl,
-        photographer = photographer
+        photographer = photographer,
+        width = width,
+        height = height
     )
 }
 
@@ -78,6 +88,8 @@ fun BookMarkDbModel.toPhoto(): Photo {
     return Photo(
         id= id,
         imageUrl = imageUrl,
-        photographer = photographer
+        photographer = photographer,
+        width = width,
+        height = height
     )
 }

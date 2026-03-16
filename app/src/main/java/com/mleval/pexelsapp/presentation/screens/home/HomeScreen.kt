@@ -2,13 +2,9 @@
 
 package com.mleval.pexelsapp.presentation.screens.home
 
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.core.animateFloatAsState
+import android.widget.Toast
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
@@ -17,26 +13,18 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.grid.GridItemSpan
-import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.staggeredgrid.LazyVerticalStaggeredGrid
 import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
-import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridItemSpan
-import androidx.compose.foundation.lazy.staggeredgrid.items
 import androidx.compose.foundation.lazy.staggeredgrid.itemsIndexed
-import androidx.compose.foundation.lazy.staggeredgrid.rememberLazyStaggeredGridState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Search
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
-import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
@@ -44,14 +32,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -59,36 +42,42 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
-import coil3.compose.AsyncImage
-import coil3.request.ImageRequest
-import coil3.request.crossfade
-import com.google.accompanist.placeholder.PlaceholderHighlight
 import com.mleval.pexelsapp.R
 import com.mleval.pexelsapp.domain.entity.Collection
 import com.mleval.pexelsapp.domain.entity.Photo
-import com.google.accompanist.placeholder.material.placeholder
-import com.google.accompanist.placeholder.material.shimmer
-import com.mleval.pexelsapp.presentation.screens.details.Source
-import kotlinx.coroutines.flow.distinctUntilChanged
+import com.mleval.pexelsapp.presentation.components.EmptyPhotosStub
+import com.mleval.pexelsapp.presentation.components.PhotoCard
+import com.mleval.pexelsapp.presentation.components.ProgressBar
 
 @Composable
 fun HomeScreen(
+    modifier: Modifier = Modifier,
     viewModel: HomeViewModel = hiltViewModel(),
     onPhotoClick: (Long) -> Unit
 ) {
 
-    Scaffold(
-        containerColor = MaterialTheme.colorScheme.background
-    ) {innerPadding ->
         val state by viewModel.state.collectAsState()
+        val context = LocalContext.current
+
+        LaunchedEffect(Unit) {
+            viewModel.events.collect { event ->
+                when (event) {
+                 is UiEvent.ShowToast -> {
+                        Toast.makeText(
+                            context,
+                            event.message,
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }
+                }
+        }
+    }
 
         when(val currentState =  state) {
-            HomeScreenState.Error -> {
-
-            }
+            HomeScreenState.Error -> {}
             is HomeScreenState.HomeContent -> {
                 HomeContent(
-                    modifier= Modifier.padding(innerPadding),
+                    modifier = modifier,
                     state = currentState,
                     onQueryChange = {
                         viewModel.processCommands(HomeScreenCommands.InputQuery(it))
@@ -102,16 +91,16 @@ fun HomeScreen(
                     onPhotoClick = {
                         onPhotoClick(it)
                     },
+                    onRetryClick = {
+                        viewModel.processCommands(HomeScreenCommands.RetryQuery)
+                    },
                     onClearClick = {
                         viewModel.processCommands(HomeScreenCommands.ClearQuery)
                     }
                 )
             }
-            HomeScreenState.Loading -> {
-
-            }
+            HomeScreenState.Loading -> {}
         }
-    }
 }
 
 @Composable
@@ -226,49 +215,6 @@ private fun CollectionsRow(
     }
 }
 
-@Composable
-private fun PhotoImage(
-    modifier: Modifier = Modifier,
-    imageUrl: String,
-    isLoading: Boolean,
-    id: Long,
-    onPhotoClick: (Long) -> Unit
-) {
-    val interactionSource = remember { MutableInteractionSource() }
-    val isPressed by interactionSource.collectIsPressedAsState()
-
-    val scale by animateFloatAsState(
-        targetValue = if (isPressed) 0.95f else 1f,
-        label = "pressScale"
-    )
-
-    AsyncImage(
-        model = ImageRequest.Builder(LocalContext.current)
-            .data(imageUrl)
-            .crossfade(true)
-            .build(),
-        placeholder = painterResource(R.drawable.splash_logo),
-        contentDescription = stringResource(R.string.photo_image),
-        modifier = modifier
-            .fillMaxWidth()
-            .graphicsLayer {
-                scaleX = scale
-                scaleY = scale
-            }
-            .clip(RoundedCornerShape(20.dp))
-            .clickable(
-                interactionSource = interactionSource,
-                indication = null
-            ) {
-                onPhotoClick(id)
-            }
-            .placeholder(
-                visible = isLoading,
-                highlight = PlaceholderHighlight.shimmer()
-            ),
-        contentScale = ContentScale.Crop,
-    )
-}
 
 @Composable
 private fun PhotosGrid(
@@ -289,38 +235,18 @@ private fun PhotosGrid(
             key = { _, photo -> photo.id }
         ) { index, photo ->
 
-            PhotoImage(
-                imageUrl = photo.imageUrl,
+            PhotoCard(
+                photo = photo,
                 isLoading = isLoading,
-                id = photo.id,
                 onPhotoClick = {
                     onPhotoClick(it)
                 }
             )
         }
 
-        }
-}
-
-@Composable
-private fun ProgressBar(
-    modifier: Modifier = Modifier,
-    isLoading: Boolean
-) {
-    Box(
-        modifier = modifier
-            .fillMaxWidth()
-            .height(3.dp)
-    ) {
-        AnimatedVisibility(isLoading) {
-            LinearProgressIndicator(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(3.dp)
-            )
-        }
     }
 }
+
 @Composable
 private fun HomeContent(
     modifier: Modifier = Modifier,
@@ -329,6 +255,7 @@ private fun HomeContent(
     onSearchClick: (String) -> Unit,
     onCollectionClick: (String) -> Unit,
     onPhotoClick: (Long) -> Unit,
+    onRetryClick: () -> Unit,
     onClearClick: () -> Unit,
 ) {
     Column(
@@ -355,20 +282,25 @@ private fun HomeContent(
             ProgressBar(isLoading = state.isLoading)
         }
         Spacer(Modifier.height(12.dp))
-        if (state.photos.isEmpty() && !state.isLoading) {
-            EmptyPhotosStub(
-                onExploreClick = {
-                    onClearClick()
-                }
-            )
-        } else {
-            PhotosGrid(
-                photos = state.photos,
-                isLoading = state.isLoading,
-                onPhotoClick = {
-                    onPhotoClick(it)
-                }
-            )
+        when {
+            state.isNetworkError -> {
+                NetworkStub(
+                    onRetryClick = onRetryClick
+                )
+            }
+            state.photos.isEmpty() && !state.isLoading -> {
+                EmptyPhotosStub(
+                    text = stringResource(R.string.no_results_found),
+                    onExploreClick = onClearClick
+                )
+            }
+            else -> {
+                PhotosGrid(
+                    photos = state.photos,
+                    isLoading = state.isLoading,
+                    onPhotoClick = onPhotoClick
+                )
+            }
         }
 
     }
@@ -376,29 +308,28 @@ private fun HomeContent(
 }
 
 @Composable
-private fun EmptyPhotosStub(
+private fun NetworkStub(
     modifier: Modifier = Modifier,
-    onExploreClick: () -> Unit
+    onRetryClick: () -> Unit
 ) {
     Column (
         modifier=modifier.fillMaxSize(),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ){
-        Text(
-            text = stringResource(R.string.no_results_found),
-            color = MaterialTheme.colorScheme.onBackground,
-            fontWeight = FontWeight.W500,
-            fontSize = 14.sp
+        Icon(
+            painter = painterResource(R.drawable.ic_no_network),
+            contentDescription = stringResource(R.string.no_internet),
+            tint = MaterialTheme.colorScheme.onBackground
         )
 
         Spacer(Modifier.height(8.dp))
 
         Text(
             modifier = Modifier.clickable {
-                onExploreClick()
+                onRetryClick()
             },
-            text = stringResource(R.string.explore),
+            text = stringResource(R.string.try_again),
             color = MaterialTheme.colorScheme.primary,
             fontWeight = FontWeight.W700,
             fontSize = 18.sp

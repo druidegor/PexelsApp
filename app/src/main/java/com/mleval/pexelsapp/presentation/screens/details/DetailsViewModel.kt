@@ -52,8 +52,7 @@ class DetailsViewModel @AssistedInject constructor(
                 val isBookmarked = isPhotoBookMarkedUseCase(id)
 
                 _state.value = PhotoDetailsState.PhotoDetail(
-                    imageUrl = photo.imageUrl,
-                    photographer = photo.photographer,
+                    photo = photo,
                     isBookmarked = isBookmarked
                 )
 
@@ -80,13 +79,7 @@ class DetailsViewModel @AssistedInject constructor(
                         if (current.isBookmarked) {
                             removePhotoFromBookMarkUseCase(id)
                         } else {
-                            addPhotoToBookMarkUseCase(
-                                Photo(
-                                    id = id,
-                                    imageUrl = current.imageUrl,
-                                    photographer = current.photographer
-                                )
-                            )
+                            addPhotoToBookMarkUseCase(photo = current.photo )
                         }
 
                         _state.value = current.copy(
@@ -95,7 +88,7 @@ class DetailsViewModel @AssistedInject constructor(
                     }
 
                     DetailsCommands.DownloadPhoto -> {
-                        imageDownloader(current.imageUrl)
+                        imageDownloader(current.photo.imageUrl)
                     }
                 }
             }
@@ -123,8 +116,7 @@ sealed interface PhotoDetailsState {
     data object Loading : PhotoDetailsState
 
     data class PhotoDetail(
-        val imageUrl: String,
-        val photographer: String,
+        val photo: Photo,
         val isBookmarked: Boolean
     ) : PhotoDetailsState
 

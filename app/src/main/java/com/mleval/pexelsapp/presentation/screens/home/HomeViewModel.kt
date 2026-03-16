@@ -2,7 +2,6 @@
 
 package com.mleval.pexelsapp.presentation.screens.home
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.mleval.pexelsapp.domain.entity.Collection
@@ -13,17 +12,18 @@ import com.mleval.pexelsapp.domain.usecase.SearchPhotosUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
-import kotlinx.coroutines.flow.debounce
-import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import java.io.IOException
 import javax.inject.Inject
 
 @HiltViewModel
@@ -36,6 +36,8 @@ class HomeViewModel @Inject constructor(
     private val _state = MutableStateFlow<HomeScreenState>(HomeScreenState.Loading)
     val state = _state.asStateFlow()
 
+    private val _events = MutableSharedFlow<UiEvent>()
+    val events = _events.asSharedFlow()
     private val query = MutableStateFlow<String>("")
     private var page = 1
 
@@ -54,7 +56,17 @@ class HomeViewModel @Inject constructor(
                     )
                 }
                 observeQuery()
+            } catch (e: IOException) {
+                _state.update {
+                    HomeScreenState.HomeContent(
+                        photos = emptyList(),
+                        collections = emptyList(),
+                        query = "",
+                        isNetworkError = true
+                    )
+                }
             } catch (e: Exception) {
+                sendToast("Something went wrong")
                 _state.update { HomeScreenState.Error }
             }
 
@@ -68,17 +80,41 @@ class HomeViewModel @Inject constructor(
             .onEach { query ->
                 _state.update { previousState ->
                     if (previousState is HomeScreenState.HomeContent) {
-                        previousState.copy(query = query, isLoading = true)
+                        previousState.copy(
+                            query = query,
+                            isLoading = true,
+                            isNetworkError = false
+                        )
                     } else {
                         previousState
                     }
                 }
             }
             .flatMapLatest { query ->
-                if (query.isEmpty()) {
+
+                val flow = if (query.isEmpty()) {
                     getCuratedPhotosUseCase(page)
                 } else {
-                    searchPhotosUseCase(query,page)
+                    searchPhotosUseCase(query, page)
+                }
+                flow.catch { e ->
+                    when (e) {
+                        is IOException -> {
+                            sendToast("No internet connection")
+                            _state.update { previousState ->
+                                if (previousState is HomeScreenState.HomeContent) {
+                                    previousState.copy(
+                                        isNetworkError = true,
+                                        isLoading = false
+                                    )
+                                } else previousState
+                            }
+                        }
+                        else -> {
+                            sendToast("Something went wrong")
+                            _state.update { HomeScreenState.Error }
+                        }
+                    }
                 }
             }
             .onEach {photos ->
@@ -99,9 +135,6 @@ class HomeViewModel @Inject constructor(
                         previousState
                     }
                 }
-            }
-            .catch {
-                _state.update { HomeScreenState.Error }
             }
             .launchIn(viewModelScope)
     }
@@ -173,7 +206,16 @@ class HomeViewModel @Inject constructor(
             HomeScreenCommands.ClearQuery -> {
                 query.update { "" }
             }
+
+            HomeScreenCommands.RetryQuery -> {
+                query.update { "$it " }
+                query.update { it.trim() }
+            }
         }
+    }
+
+    private suspend fun sendToast(message: String) {
+        _events.emit(UiEvent.ShowToast(message))
     }
 }
 
@@ -184,6 +226,8 @@ sealed interface HomeScreenCommands{
     data class ClickSearch(val query: String): HomeScreenCommands
 
     data object ClearQuery: HomeScreenCommands
+
+    data object RetryQuery: HomeScreenCommands
 
     data class ToggleCollection(val collectionTitle: String): HomeScreenCommands
 
@@ -197,7 +241,16 @@ sealed interface HomeScreenState {
         val photos: List<Photo> = emptyList(),
         val collections: List<Collection> = emptyList(),
         val isLoading: Boolean = false,
+        val isNetworkError: Boolean = false
     ): HomeScreenState
 
     data object Error: HomeScreenState
+}
+
+sealed interface UiEvent {
+
+    data class ShowToast(
+        val message: String
+    ) : UiEvent
+
 }
